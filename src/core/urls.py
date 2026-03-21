@@ -27,4 +27,5 @@ urlpatterns = [
     ),
     path("api/auth/", include("accounts.urls")),
     path("api/movie/", include("movie.urls")),
+    path("api/showtime/", include("showtime.urls")),
 ]

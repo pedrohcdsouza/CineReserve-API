@@ -18,4 +18,4 @@ class MovieListView(ListAPIView):
     filterset_class = MovieFilterset
 
     def get_permissions(self):
-        return [AllowAny]
+        return [AllowAny()]

@@ -5,6 +5,7 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from drf_spectacular.utils import extend_schema
 from rest_framework import generics
+from rest_framework.throttling import ScopedRateThrottle
 from order.serializers import (
     CheckoutSerializer,
     OrderSerializer,
@@ -23,6 +24,8 @@ redis_client = redis.from_url(settings.CELERY_BROKER_URL)
 
 class CheckoutView(APIView):
     permission_classes = [IsAuthenticated]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "burst"
 
     @extend_schema(request=CheckoutSerializer, responses={201: OrderSerializer})
     def post(self, request, *args, **kwargs):

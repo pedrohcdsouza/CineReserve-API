@@ -7,6 +7,7 @@ from rest_framework import status
 from rest_framework.generics import ListAPIView
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.throttling import ScopedRateThrottle
 from showtime.models import Showtime
 from theater.models import Seat
 from showtime.serializers import ShowtimeListSerializer, ShowtimeSeatSerializer
@@ -100,6 +101,9 @@ class ShowtimeSeatsView(APIView):
     },
 )
 class ShowtimeSeatReserveView(APIView):
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "burst"
+
     def get_permissions(self):
         return [IsAuthenticated()]
 

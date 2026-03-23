@@ -11,6 +11,7 @@ from showtime.models import Showtime
 from theater.models import Seat
 from showtime.serializers import ShowtimeListSerializer, ShowtimeSeatSerializer
 from showtime.filters import ShowtimeFilterset
+from showtime.tasks import release_seat_lock_task
 from drf_spectacular.utils import extend_schema
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
@@ -134,6 +135,9 @@ class ShowtimeSeatReserveView(APIView):
             if current_lock_user and current_lock_user.decode() == user_id:
                 # Refresh the lock if it's the same user
                 redis_client.expire(lock_key, 600)
+                
+                # Renew auto-release celery task
+                release_seat_lock_task.apply_async(args=[str(pk), str(seat_id)], countdown=600)
                 return Response(
                     {"detail": "Seat lock renewed."}, status=status.HTTP_200_OK
                 )
@@ -142,6 +146,10 @@ class ShowtimeSeatReserveView(APIView):
                 {"detail": "Seat is temporarily locked by another user."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+            
+        # Fire background task to release the lock in explicitly 10 mins 
+        # (This is an extra layer aside from the Redis TTL)
+        release_seat_lock_task.apply_async(args=[str(pk), str(seat_id)], countdown=600)
 
         return Response(
             {"detail": "Seat successfully locked."}, status=status.HTTP_200_OK

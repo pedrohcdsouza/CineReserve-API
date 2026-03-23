@@ -11,6 +11,7 @@ from order.serializers import (
     OrderHistorySerializer,
 )
 from order.models import Order, Ticker
+from order.tasks import send_confirmation_email_task
 from showtime.models import Showtime
 from theater.models import Seat
 from django.conf import settings
@@ -95,6 +96,9 @@ class CheckoutView(APIView):
             # Remove Redis locks
             if redis_keys:
                 redis_client.delete(*redis_keys)
+
+        # Send confirmation email via Celery asynchronously
+        send_confirmation_email_task.delay(str(order.id))
 
         # Return digital ticket (Order)
         return Response(OrderSerializer(order).data, status=status.HTTP_201_CREATED)

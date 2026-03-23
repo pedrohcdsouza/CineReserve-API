@@ -135,9 +135,11 @@ class ShowtimeSeatReserveView(APIView):
             if current_lock_user and current_lock_user.decode() == user_id:
                 # Refresh the lock if it's the same user
                 redis_client.expire(lock_key, 600)
-                
+
                 # Renew auto-release celery task
-                release_seat_lock_task.apply_async(args=[str(pk), str(seat_id)], countdown=600)
+                release_seat_lock_task.apply_async(
+                    args=[str(pk), str(seat_id)], countdown=600
+                )
                 return Response(
                     {"detail": "Seat lock renewed."}, status=status.HTTP_200_OK
                 )
@@ -146,8 +148,8 @@ class ShowtimeSeatReserveView(APIView):
                 {"detail": "Seat is temporarily locked by another user."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-            
-        # Fire background task to release the lock in explicitly 10 mins 
+
+        # Fire background task to release the lock in explicitly 10 mins
         # (This is an extra layer aside from the Redis TTL)
         release_seat_lock_task.apply_async(args=[str(pk), str(seat_id)], countdown=600)
 

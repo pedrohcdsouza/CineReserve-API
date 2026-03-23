@@ -4,7 +4,12 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from drf_spectacular.utils import extend_schema
-from order.serializers import CheckoutSerializer, OrderSerializer
+from rest_framework import generics
+from order.serializers import (
+    CheckoutSerializer,
+    OrderSerializer,
+    OrderHistorySerializer,
+)
 from order.models import Order, Ticker
 from showtime.models import Showtime
 from theater.models import Seat
@@ -93,3 +98,18 @@ class CheckoutView(APIView):
 
         # Return digital ticket (Order)
         return Response(OrderSerializer(order).data, status=status.HTTP_201_CREATED)
+
+
+from django.utils import timezone
+
+
+class MyTicketsView(generics.ListAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = OrderHistorySerializer
+
+    @extend_schema(responses=OrderHistorySerializer(many=True))
+    def get_queryset(self):
+        user = self.request.user
+        qs = Order.objects.filter(created_by=user).prefetch_related(
+            "tickers__showtime__movie", "tickers__showtime__theater", "tickers__seat"
+        )

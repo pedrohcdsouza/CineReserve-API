@@ -1,0 +1,8 @@
+.git
+.github
+.env
+docs
+**/__pycache__
+**/*.pyc
+src/celerybeat-schedule*
+docker-compose.yml

@@ -120,3 +120,4 @@ class MyTicketsView(generics.ListAPIView):
         qs = Order.objects.filter(created_by=user).prefetch_related(
             "tickers__showtime__movie", "tickers__showtime__theater", "tickers__seat"
         )
+        return qs

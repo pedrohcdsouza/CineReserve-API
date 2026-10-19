@@ -1,4 +1,4 @@
-from django.test import TestCase
+from django.test import SimpleTestCase, TestCase
 from django.utils import timezone
 from django.contrib.auth.models import User
 from rest_framework.test import APIClient
@@ -26,6 +26,20 @@ class ShowtimeTasksUnitTests(TestCase):
         mock_redis_client.get.assert_called_with("seat_lock:showtime_1:seat_1")
         mock_redis_client.delete.assert_called_with("seat_lock:showtime_1:seat_1")
         self.assertIn("Lock released", result)
+
+
+
+class ReleaseSeatLockTaskUnitTests(SimpleTestCase):
+    @patch("showtime.tasks.redis")
+    def test_does_not_delete_when_lock_missing(self, mock_redis):
+        mock_redis_client = MagicMock()
+        mock_redis.from_url.return_value = mock_redis_client
+        mock_redis_client.get.return_value = None
+
+        release_seat_lock_task("showtime_1", "seat_1")
+
+        mock_redis_client.get.assert_called_with("seat_lock:showtime_1:seat_1")
+        mock_redis_client.delete.assert_not_called()
 
 
 class ShowtimeApiIntegrationTests(TestCase):

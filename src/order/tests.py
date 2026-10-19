@@ -1,4 +1,4 @@
-from django.test import TestCase
+from django.test import SimpleTestCase, TestCase
 from django.utils import timezone
 from django.contrib.auth.models import User
 from rest_framework.test import APIClient
@@ -9,7 +9,20 @@ from theater.models import Theater, Seat
 from movie.models import Movie
 from order.models import Order, Ticker
 from order.tasks import send_confirmation_email_task
+from order.serializers import CheckoutSerializer
 from datetime import timedelta
+
+
+class CheckoutSerializerUnitTests(SimpleTestCase):
+    def test_rejects_invalid_seat_id(self):
+        serializer = CheckoutSerializer(
+            data={
+                "showtime_id": "3f1c2a1e-8a4b-4c3d-9e2f-1a2b3c4d5e6f",
+                "seats": [{"seat_id": "not-a-uuid"}],
+            }
+        )
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("seats", serializer.errors)
 
 
 class OrderTasksUnitTests(TestCase):

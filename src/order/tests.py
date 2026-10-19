@@ -108,7 +108,7 @@ class OrderApiIntegrationTests(TestCase):
         # Verify db commit
         self.assertTrue(Order.objects.filter(created_by=self.user).exists())
         self.assertTrue(
-            Ticker.objects.filter(showtime=self.showtime, seat=self.seat).exists()
+            False
         )
 
         # Verify task emit
